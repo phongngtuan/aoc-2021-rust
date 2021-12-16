@@ -1,7 +1,8 @@
 #![feature(stdin_forwarders)]
 
-use advent_of_code_2021_rs::day1;
 use std::io;
+
+use advent_of_code_2021_rs::day1;
 
 fn main() -> io::Result<()> {
     let ints: Vec<u32> = io::stdin()

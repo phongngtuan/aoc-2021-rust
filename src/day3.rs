@@ -76,8 +76,6 @@ pub fn part2(input: &[String]) -> usize {
 }
 
 mod tests {
-    use crate::day3::*;
-
     #[test]
     fn test_part1() {
         let input: Vec<String> = "00100
@@ -95,7 +93,7 @@ mod tests {
             .lines()
             .map(|x| x.trim().to_string())
             .collect();
-        let part1_result = part1(&input);
+        let part1_result = super::part1(&input);
         assert_eq!(part1_result, 198);
     }
 
@@ -116,7 +114,7 @@ mod tests {
             .lines()
             .map(|x| x.trim().to_string())
             .collect();
-        let part2_result = part2(&input);
+        let part2_result = super::part2(&input);
         assert_eq!(part2_result, 230);
     }
 }
