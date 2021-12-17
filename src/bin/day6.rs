@@ -11,7 +11,7 @@ fn main() -> io::Result<()> {
         .filter_map(|x| x.ok())
         .next()
         .unwrap()
-        .split(",")
+        .split(',')
         .filter_map(|x| x.parse().ok())
         .collect();
     let part1_result = part1(&input);

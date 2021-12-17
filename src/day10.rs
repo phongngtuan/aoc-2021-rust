@@ -57,7 +57,7 @@ pub fn part1(lines: &[String]) -> u64 {
             _ => (),
         }
     }
-    errors.iter().map(|c| error_score(c)).sum()
+    errors.iter().map(error_score).sum()
 }
 
 pub fn part2(lines: &[String]) -> u64 {
@@ -72,6 +72,6 @@ pub fn part2(lines: &[String]) -> u64 {
             _ => (),
         }
     }
-    complete_score.sort();
+    complete_score.sort_unstable();
     complete_score[complete_score.len() / 2]
 }

@@ -13,11 +13,7 @@ fn search(number: u32, board: &Board) -> Option<(usize, usize)> {
 }
 
 fn remove(number: u32, v: &mut Vec<u32>) -> Option<u32> {
-    if let Some(idx) = v.iter().position(|x| *x == number) {
-        Some(v.swap_remove(idx))
-    } else {
-        None
-    }
+    v.iter().position(|x| *x == number).map(|idx| v.swap_remove(idx))
 }
 
 pub fn part1(numbers: &[u32], boards: &[Board]) -> u32 {

@@ -77,7 +77,7 @@ impl Iterator for LineIter {
 }
 
 fn parse_point(s: &str) -> Point {
-    let tokens: Vec<String> = s.split(",").map(String::from).collect();
+    let tokens: Vec<String> = s.split(',').map(String::from).collect();
     let x: i32 = tokens[0].parse().unwrap();
     let y: i32 = tokens[1].parse().unwrap();
     Point { x, y }

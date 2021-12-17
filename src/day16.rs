@@ -1,9 +1,3 @@
-#![feature(exact_size_is_empty)]
-
-use std::borrow::{Borrow, BorrowMut};
-use std::cmp::Reverse;
-use std::collections::{HashMap, VecDeque};
-use std::collections::BinaryHeap;
 use itertools::Itertools;
 
 fn parse_literal_varlength<F>(iter: &mut F) -> usize
@@ -52,7 +46,7 @@ where F: Iterator<Item=char> {
         4 => { // literal package
             literal = parse_literal_varlength(iter.by_ref());
         },
-        id => { // operator package
+        _id => { // operator package
             match iter.next() {
                 Some('0') => {
                     let subpacket_length = parse_literal_fix_length(iter.by_ref(), 15);
@@ -93,7 +87,7 @@ where F: Iterator<Item=char> {
 }
 
 pub fn part1(input: &str) -> usize {
-    let mut bits: Vec<_> = input.trim().chars().enumerate()
+    let bits: Vec<_> = input.trim().chars().enumerate()
         .map(|(idx, c)| {
             match c.to_digit(16) {
                 Some(i) => format!("{:04b}", i),
@@ -109,7 +103,7 @@ pub fn part1(input: &str) -> usize {
 }
 
 pub fn part2(input: &str) -> usize {
-    let mut bits: Vec<_> = input.trim().chars().enumerate()
+    let bits: Vec<_> = input.trim().chars().enumerate()
         .map(|(idx, c)| {
             match c.to_digit(16) {
                 Some(i) => format!("{:04b}", i),

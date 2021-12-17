@@ -3,7 +3,7 @@ use std::collections::HashSet;
 pub fn part1(input: &str) -> u64 {
     let mut lines = input.lines();
     let mut graph: HashSet<(i64, i64)> = HashSet::new();
-    while let Some(line) = lines.next() {
+    for line in lines.by_ref() {
         if line.trim().is_empty() {
             break;
         }
@@ -16,7 +16,7 @@ pub fn part1(input: &str) -> u64 {
     }
 
     let mut fold_count = 0;
-    while let Some(line) = lines.next() {
+    for line in lines {
         fold_count += 1;
         if fold_count == 2 {
             break;
@@ -25,8 +25,6 @@ pub fn part1(input: &str) -> u64 {
         let fold_line: i64 = coordinate.parse().unwrap();
         match instruction {
             "fold along y" => {
-                println!("folding y = {}", fold_line);
-
                 let mut folded = HashSet::new();
                 for (x, y) in graph {
                     if y > fold_line {
@@ -40,7 +38,6 @@ pub fn part1(input: &str) -> u64 {
             },
 
             "fold along x" => {
-                println!("folding y = {}", fold_line);
                 let mut folded = HashSet::new();
                 for (x, y) in graph {
                     if x > fold_line {
@@ -63,7 +60,7 @@ pub fn part2(input: &str) -> u64 {
     let mut graph: HashSet<(i64, i64)> = HashSet::new();
     let mut max_x = 0;
     let mut max_y = 0;
-    while let Some(line) = lines.next() {
+    for line in lines.by_ref() {
         if line.trim().is_empty() {
             break;
         }
@@ -77,12 +74,11 @@ pub fn part2(input: &str) -> u64 {
         graph.insert((x, y));
     }
 
-    while let Some(line) = lines.next() {
+    for line in lines {
         let (instruction, coordinate) = line.split_once("=").unwrap();
         let fold_line: i64 = coordinate.parse().unwrap();
         match instruction {
             "fold along y" => {
-                println!("folding y = {}", fold_line);
                 max_y = fold_line;
 
                 let mut folded = HashSet::new();
@@ -98,7 +94,6 @@ pub fn part2(input: &str) -> u64 {
             },
 
             "fold along x" => {
-                println!("folding x = {}", fold_line);
                 max_x = fold_line;
                 let mut folded = HashSet::new();
                 for (x, y) in graph {
@@ -120,7 +115,7 @@ pub fn part2(input: &str) -> u64 {
             if graph.contains(&(x, y)) {
                 print!("#")
             } else {
-                print!(".")
+                print!(" ")
             }
         }
         println!();

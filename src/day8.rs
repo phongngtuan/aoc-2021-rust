@@ -11,9 +11,9 @@ pub fn part1(lines: &[String]) -> usize {
 
     let mut ans = 0;
     for line in lines {
-        let tokens: Vec<&str> = line.split("|").collect();
+        let tokens: Vec<&str> = line.split('|').collect();
         let output = tokens[1];
-        let digits: Vec<&str> = output.split(" ").collect();
+        let digits: Vec<&str> = output.split(' ').collect();
         for digit in digits {
             let len = digit.len();
             if let Some(digit) = segment_index.get(&len) {
@@ -37,15 +37,15 @@ struct Mapping {
 impl Mapping {
 
     fn from(forward_mapping: &[u8]) -> Self {
-        let orig_segments: Vec<u8> = (0..=9).map(|d| digit_to_segment(d)).collect();
+        let orig_segments: Vec<u8> = (0..=9).map(digit_to_segment).collect();
 
-        let inverse_mapping: Vec<u8> = inverse(&forward_mapping);
-        let forward_mapping: Vec<u8> = forward_mapping.iter().cloned().collect();
+        let inverse_mapping: Vec<u8> = inverse(forward_mapping);
+        let forward_mapping: Vec<u8> = forward_mapping.to_vec();
         let alphabets: Vec<u8> = orig_segments.iter().map(|segment| apply_mapping(*segment, &forward_mapping)).collect();
-        let mapping = Mapping {
+        
+        Mapping {
             forward_mapping, inverse_mapping, alphabets
-        };
-        mapping
+        }
     }
 }
 
@@ -67,9 +67,9 @@ pub fn part2(lines: &[String]) -> u64 {
     // let all_mappings: Vec<Mapping> = vec![Mapping::from(&mapping)];
 
     for line in lines {
-        let tokens: Vec<&str> = line.split("|").collect();
-        let inputs: Vec<&str> = tokens[0].trim().split(" ").collect();
-        let outputs: Vec<&str> = tokens[1].trim().split(" ").collect();
+        let tokens: Vec<&str> = line.split('|').collect();
+        let inputs: Vec<&str> = tokens[0].trim().split(' ').collect();
+        let outputs: Vec<&str> = tokens[1].trim().split(' ').collect();
 
         let mut line_output: u64 = 0;
 
@@ -98,7 +98,7 @@ pub fn part2(lines: &[String]) -> u64 {
 fn bitmask(word: &str) -> u8 {
     let mut ans = 0;
     for char in word.chars() {
-        let index = 'g' as u8 - char as u8;
+        let index = b'g' - char as u8;
         ans |= 1 << index;
     }
     ans
@@ -120,7 +120,7 @@ fn format_digit(digit: u8) -> String {
 fn apply_mapping(input: u8, mapping: &[u8]) -> u8 {
     let mut output: u8 = 0;
     for &pos in mapping {
-        output = output << 1;
+        output <<= 1;
         let bit = (input >> (7-1-pos)) % 2;
         output |= bit;
     }

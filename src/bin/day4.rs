@@ -10,13 +10,13 @@ fn main() -> io::Result<()> {
         .lines()
         .filter_map(|x| x.ok());
 
-    let numbers: Vec<u32> = input.next().unwrap().trim().split(",").filter_map(|s| s.parse::<u32>().ok()).collect();
+    let numbers: Vec<u32> = input.next().unwrap().trim().split(',').filter_map(|s| s.parse::<u32>().ok()).collect();
     let mut boards: Vec<Board> = Vec::new();
     for line in input {
         if line.is_empty() {
             boards.push(Vec::new())
         } else {
-            let row: Vec<u32> = line.trim().split(" ").filter_map(|s| s.parse::<u32>().ok()).collect();
+            let row: Vec<u32> = line.trim().split(' ').filter_map(|s| s.parse::<u32>().ok()).collect();
             boards.last_mut().unwrap().push(row);
         }
     }

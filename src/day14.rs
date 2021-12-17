@@ -8,7 +8,7 @@ fn simulation(input: &str, count: usize) -> u64 {
     let last = s[s.len()-1];
 
     let mut rules: HashMap<(char, char), char> = HashMap::new();
-    while let Some(rule) = input.next() {
+    for rule in input {
         let rule = rule.trim();
         if !rule.is_empty() {
             let (from, to) = rule.split_once(" -> ").unwrap();
@@ -46,7 +46,7 @@ fn simulation(input: &str, count: usize) -> u64 {
     *freqs.entry(first).or_default() += 1;
     *freqs.entry(last).or_default() += 1;
     for val in freqs.values_mut() {
-        *val = *val / 2;
+        *val /= 2;
     }
     match freqs.values().minmax() {
         MinMaxResult::MinMax(a, b) => (*b-*a) as u64,

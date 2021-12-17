@@ -12,14 +12,14 @@ impl FromStr for Command {
   type Err = DirectionParseError;
 
   fn from_str(s: &str) -> Result<Self, Self::Err> {
-    let tokens: Vec<&str> = s.split(" ").collect();
+    let tokens: Vec<&str> = s.split(' ').collect();
     if tokens.len() != 2 {
       Err(DirectionParseError)
     } else {
       let d = tokens[0];
       let u = tokens[1];
 
-      if let Some(unit) = u.parse().ok() {
+      if let Ok(unit) = u.parse() {
         match d {
           "down" => Ok(Command::Down(unit)),
           "up" => Ok(Command::Up(unit)),
