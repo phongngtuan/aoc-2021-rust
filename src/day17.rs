@@ -1,7 +1,3 @@
-use std::collections::HashSet;
-use std::ops::Index;
-use itertools::Itertools;
-
 fn hit_target(x_min: i64, x_max: i64, y_min: i64, y_max: i64, mut dx: i64, mut dy: i64) -> Option<i64> {
     let (mut x, mut y) = (0, 0);
     let mut top_y = 0;
@@ -71,19 +67,6 @@ pub fn part2(input: &str) -> i64 {
         }
     }
     ans
-}
-
-
-fn simulate(pos0: isize, v0: isize) -> (isize, isize) {
-    // return (final_pos, time)
-    let mut time = 0;
-    let mut pos = pos0;
-    let mut v = v0;
-    while v != 0 {
-        pos += v;
-    }
-
-    (pos, time)
 }
 
 #[cfg(test)]
