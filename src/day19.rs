@@ -1,9 +1,16 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::ops::{Add, Mul, Sub};
 use itertools::{enumerate, Itertools};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 struct Point([i64; 3]);
+
+impl ToString for Point {
+    fn to_string(&self) -> String {
+        let points = self.0;
+        format!("({},{},{})", points[0], points[1], points[2])
+    }
+}
 
 impl Point {
     fn from(x: i64, y: i64, z: i64) -> Self {
@@ -12,6 +19,15 @@ impl Point {
 
     fn zero() -> Self {
         Point([0, 0, 0])
+    }
+
+    fn manhattan_dist(&self, rhs: &Point) -> u64 {
+        let a = self.0;
+        let b = rhs.0;
+        let dx = (a[0] - b[0]).abs() as u64;
+        let dy = (a[1] - b[1]).abs() as u64;
+        let dz = (a[2] - b[2]).abs() as u64;
+        dx + dy + dz
     }
 }
 
@@ -54,7 +70,7 @@ impl Matrix {
         Matrix([[0; 3]; 3])
     }
 
-    fn identity() -> Self { Matrix([[1, 0, 0], [0, 1, 0], [0, 0 ,1]])}
+    fn identity() -> Self { Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]]) }
 }
 
 impl Matrix {
@@ -79,19 +95,18 @@ impl Mul<Point> for Matrix {
 
 #[derive(Copy, Clone, Debug)]
 struct Alignment {
-    rotation: Matrix,
+    orientation: [i64; 3],
     translation: Point,
 }
 
 impl Alignment {
     fn identity() -> Self {
-        let rotation = Matrix::identity();
         let translation = Point::zero();
-        Alignment { rotation, translation}
+        Alignment { orientation: [1, 2, 3], translation }
     }
 
     fn apply(&self, point: Point) -> Point {
-        self.rotation * point + self.translation
+        orient(point, &self.orientation) + self.translation
     }
 
     fn from(a: &[Point], b: &[Point]) -> Option<Self> {
@@ -99,21 +114,21 @@ impl Alignment {
         let mut max_score = 0;
         for i in 0..a.len() {
             for j in 0..b.len() {
-                'orientation: for rotation in all_orientations() {
-                    // find the translation matching a[i] to b[j]
-                    let translation = b[j] - rotation * a[i];
-                    let alignment = Alignment { rotation, translation };
+                // find the transformation that turn a[i] into b[j]
+                'orientation: for orientation in ORIENTATIONS {
+                    let translation = b[j] - orient(a[i], &orientation);
+                    let alignment = Alignment { orientation, translation };
                     // find the score of this alignment
                     let score = alignment.score(a, b);
+                    // println!("translation: {}", translation.to_string());
                     max_score = max_score.max(score);
                     if score >= 12 {
-                        println!("Found alignment with score = {}, offset: {:?}", score, translation);
-                        return Some(alignment)
+                        return Some(alignment);
                     }
                 }
             }
         }
-        println!("No alignment found, max score = {}", max_score);
+        // println!("No alignment found, max score = {}", max_score);
         None
     }
 
@@ -129,13 +144,52 @@ fn test_orientation(matrix: Matrix) -> bool {
     rows[0] * rows[1] == rows[2]
 }
 
+const ORIENTATIONS: [[i64; 3]; 24] = [
+    [1, 2, 3],
+    [2, -1, 3],
+    [-1, -2, 3],
+    [-2, 1, 3],
+    [2, 3, 1],
+    [-1, 3, 2],
+    [-2, 3, -1],
+    [1, 3, -2],
+    [3, 1, 2],
+    [3, 2, -1],
+    [3, -1, -2],
+    [3, -2, 1],
+    [2, 1, -3],
+    [-1, 2, -3],
+    [-2, -1, -3],
+    [1, -2, -3],
+    [1, -3, 2],
+    [2, -3, -1],
+    [-1, -3, -2],
+    [-2, -3, 1],
+    [-3, 2, 1],
+    [-3, -1, 2],
+    [-3, -2, -1],
+    [-3, 1, -2],
+];
+
+fn orient(point: Point, orientation: &[i64; 3]) -> Point {
+    let mut result = [0, 0, 0];
+    let mut p = point.0;
+    for (write, read) in orientation.iter().enumerate() {
+        result[write] = p[read.abs() as usize - 1];
+        if *read < 0 {
+            result[write] = -result[write];
+        }
+    }
+    Point(result)
+}
+
 // try all combinations and filter out those illegal
 fn all_orientations() -> Vec<Matrix> {
     let mut ans = Vec::new();
     for permutation in [0, 1, 2].iter().permutations(3) {
-        let x= *permutation[0];
-        let y= *permutation[1];
-        let z= *permutation[2];
+        let x = *permutation[0];
+        let y = *permutation[1];
+        let z = *permutation[2];
         for a in [-1, 1] {
             for b in [-1, 1] {
                 for c in [-1, 1] {
@@ -153,9 +207,27 @@ fn all_orientations() -> Vec<Matrix> {
     ans
 }
 
-pub fn part1(input: &str) -> i64 {
+// pub fn dfs(i: usize, j: usize, visited: &mut HashSet<(usize, usize)>, scanners: &Vec<Vec<Point>>, alignments: &mut HashSet<usize, Alignment>) {
+//     if visited.contains(&(i, j)) {
+//         return;
+//     }
+//
+//     if let Some(alignment_i_j) = Alignment::from(&scanners[j], &scanners[i]) {
+//         println!("Found alignment between {} {}, {:?}", i, j, alignment_i_j.translation);
+//         for point in &scanners[j] {
+//             // find the coordinate of this point in the base orientation
+//             let point0 = alignment_i_j.apply(*point);
+//
+//             // println!("{},{},{}", point0.0[0], point0.0[1], point0.0[2]);
+//             all_points.insert(point0);
+//         }
+//     }
+//
+// }
+
+fn solve(input: &str) -> (HashSet<Point>, HashMap<usize, Alignment>) {
     let mut scanners: Vec<Vec<Point>> = Vec::new();
-    let mut current : Vec<Point> = Vec::new();
+    let mut current: Vec<Point> = Vec::new();
     for line in input.lines() {
         if line.starts_with("---") {
             current = Vec::new();
@@ -173,19 +245,58 @@ pub fn part1(input: &str) -> i64 {
     for point in &scanners[0] {
         all_points.insert(*point);
     }
-    for i in 0..scanners.len() {
-        for j in i+1..scanners.len() {
-            println!("Checking {} {}", i, j);
-            if let Some(alignment) = Alignment::from(&scanners[j], &scanners[i]) {
-                // put all coordinate
-                println!("{:?}", alignment.translation);
+
+    let mut alignments: HashMap<usize, Alignment> = HashMap::new();
+    alignments.insert(0, Alignment::identity());
+
+    let mut queue = VecDeque::new();
+    queue.push_back(0);
+
+    while let Some(i) = queue.pop_front() {
+        for j in 0..scanners.len() {
+            if j == i || alignments.contains_key(&j) {
+                continue;
+            }
+
+            if let Some(alignment_i_j) = Alignment::from(&scanners[j], &scanners[i]) {
+                println!("Found alignment between {} {}, {:?}", i, j, alignment_i_j.translation);
+                let mut oriented_scanners = Vec::new();
                 for point in &scanners[j] {
-                    all_points.insert(alignment.apply(*point));
+                    // find the coordinate of this point in the base orientation
+                    let point0 = alignment_i_j.apply(*point);
+                    // println!("{},{},{}", point0.0[0], point0.0[1], point0.0[2]);
+                    all_points.insert(point0);
+                    oriented_scanners.push(point0);
                 }
+
+                scanners[j] = oriented_scanners;
+                queue.push_back(j);
+                alignments.insert(j, alignment_i_j);
             }
         }
     }
-    all_points.len() as i64
+    (all_points, alignments)
+}
+
+pub fn part1(input: &str) -> i64 {
+    let (points, _) = solve(input);
+    points.len() as i64
+}
+
+pub fn part2(input: &str) -> i64 {
+    let (_, alignments) = solve(input);
+    alignments
+        .values()
+        .combinations(2)
+        .map(|comb| {
+            let a = comb[0];
+            let b = comb[1];
+            let dist = a.translation.manhattan_dist(&b.translation);
+            println!("{:?} {:?} {}", a.translation, b.translation, dist);
+            dist
+        })
+        .max()
+        .unwrap() as i64
 }
 
 
@@ -194,11 +305,18 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_manhattan_distance() {
+        let a = Point([1105, -1205, 1229]);
+        let b = Point([-92, -2380, -20]);
+        assert_eq!(a.manhattan_dist(&b), 3621);
+    }
+
+    #[test]
     fn matrix_mul() {
         let matrix = Matrix([
             [1, 0, 0],
             [0, 1, 0],
-            [0, 0 ,1],
+            [0, 0, 1],
         ]);
         let point = Point([1, 2, 3]);
 
@@ -228,7 +346,7 @@ mod tests {
         let matrix = Matrix([
             [1, 0, 0],
             [0, 1, 0],
-            [0, 0 ,1],
+            [0, 0, 1],
         ]);
         assert!(test_orientation(matrix))
     }
@@ -238,35 +356,51 @@ mod tests {
         assert_eq!(all_orientations().len(), 24);
     }
 
+    fn test_all_orientations2() {
+        let p = Point([1, 2, 3]);
+        let mut a = HashSet::new();
+        let mut b = HashSet::new();
+        for orientation in all_orientations() {
+            a.insert(orientation * p);
+        }
+
+        for o in &ORIENTATIONS {
+            b.insert(orient(p, o));
+        }
+
+        assert_eq!(a.len(), b.len());
+        assert_eq!(a, b);
+    }
+
     #[test]
     fn test_alignment() {
         let a = vec![
-Point([-618,-824,-621]),
-Point([-537,-823,-458]),
-Point([-447,-329,318]),
-Point([404,-588,-901]),
-Point([544,-627,-890]),
-Point([528,-643,409 ]),
-Point([-661,-816,-575]),
-Point([390,-675,-793]),
-Point([423,-701,434 ]),
-Point([-345,-311,381]),
-Point([459,-707,401 ]),
-Point([-485,-357,347]),
+            Point([-618, -824, -621]),
+            Point([-537, -823, -458]),
+            Point([-447, -329, 318]),
+            Point([404, -588, -901]),
+            Point([544, -627, -890]),
+            Point([528, -643, 409]),
+            Point([-661, -816, -575]),
+            Point([390, -675, -793]),
+            Point([423, -701, 434]),
+            Point([-345, -311, 381]),
+            Point([459, -707, 401]),
+            Point([-485, -357, 347]),
         ];
         let b = vec![
-Point([686,422,578]),
-Point([605,423,415]),
-Point([515,917,-361]),
-Point([-336,658,858]),
-Point([-476,619,847]),
-Point([-460,603,-452]),
-Point([729,430,532]),
-Point([-322,571,750]),
-Point([-355,545,-477]),
-Point([413,935,-424]),
-Point([-391,539,-444]),
-Point([553,889,-390]),
+            Point([686, 422, 578]),
+            Point([605, 423, 415]),
+            Point([515, 917, -361]),
+            Point([-336, 658, 858]),
+            Point([-476, 619, 847]),
+            Point([-460, 603, -452]),
+            Point([729, 430, 532]),
+            Point([-322, 571, 750]),
+            Point([-355, 545, -477]),
+            Point([413, 935, -424]),
+            Point([-391, 539, -444]),
+            Point([553, 889, -390]),
         ];
         let alignment = Alignment::from(&b, &a).unwrap();
 
@@ -305,11 +439,11 @@ Point([553,889,-390]),
 413,935,-424
 -391,539,-444
 553,889,-390";
-        part1(input);
+        assert_eq!(part1(input), 12);
     }
 
     #[test]
-    fn part1_example2() {
+    fn part1_align_0_1() {
         let input = "\
 --- scanner 0 ---
 404,-588,-901
@@ -367,12 +501,128 @@ Point([553,889,-390]),
         assert_eq!(part1(input), 38);
     }
 
-
     #[test]
-    fn part1_example() {
-        assert_eq!(
-            part1(
-                "\
+    fn part1_align_1_4() {
+        let input = "\
+--- scanner 1 ---
+686,422,578
+605,423,415
+515,917,-361
+-336,658,858
+95,138,22
+-476,619,847
+-340,-569,-846
+567,-361,727
+-460,603,-452
+669,-402,600
+729,430,532
+-500,-761,534
+-322,571,750
+-466,-666,-811
+-429,-592,574
+-355,545,-477
+703,-491,-529
+-328,-685,520
+413,935,-424
+-391,539,-444
+586,-435,557
+-364,-763,-893
+807,-499,-711
+755,-354,-619
+553,889,-390
+
+--- scanner 4 ---
+727,592,562
+-293,-554,779
+441,611,-461
+-714,465,-776
+-743,427,-804
+-660,-479,-426
+832,-632,460
+927,-485,-438
+408,393,-506
+466,436,-512
+110,16,151
+-258,-428,682
+-393,719,612
+-211,-452,876
+808,-476,-593
+-575,615,604
+-485,667,467
+-680,325,-822
+-627,-443,-432
+872,-547,-609
+833,512,582
+807,604,487
+839,-516,451
+891,-625,532
+-652,-548,-490
+30,-46,-14";
+        assert_eq!(part1(input), 39);
+    }
+
+    //
+//     #[test]
+//     fn part1_example2() {
+//         let input = "\
+// --- scanner 0 ---
+// 404,-588,-901
+// 528,-643,409
+// -838,591,734
+// 390,-675,-793
+// -537,-823,-458
+// -485,-357,347
+// -345,-311,381
+// -661,-816,-575
+// -876,649,763
+// -618,-824,-621
+// 553,345,-567
+// 474,580,667
+// -447,-329,318
+// -584,868,-557
+// 544,-627,-890
+// 564,392,-477
+// 455,729,728
+// -892,524,684
+// -689,845,-530
+// 423,-701,434
+// 7,-33,-71
+// 630,319,-379
+// 443,580,662
+// -789,900,-551
+// 459,-707,401
+//
+// --- scanner 1 ---
+// 686,422,578
+// 605,423,415
+// 515,917,-361
+// -336,658,858
+// 95,138,22
+// -476,619,847
+// -340,-569,-846
+// 567,-361,727
+// -460,603,-452
+// 669,-402,600
+// 729,430,532
+// -500,-761,534
+// -322,571,750
+// -466,-666,-811
+// -429,-592,574
+// -355,545,-477
+// 703,-491,-529
+// -328,-685,520
+// 413,935,-424
+// -391,539,-444
+// 586,-435,557
+// -364,-763,-893
+// 807,-499,-711
+// 755,-354,-619
+// 553,889,-390";
+//         assert_eq!(part1(input), 38);
+//     }
+//
+//
+    const EXAMPLE: &str = "\
 --- scanner 0 ---
 404,-588,-901
 528,-643,409
@@ -508,8 +758,15 @@ Point([553,889,-390]),
 839,-516,451
 891,-625,532
 -652,-548,-490
-30,-46,-14"
-            ), 79
-        )
+30,-46,-14";
+
+    #[test]
+    fn part1_example() {
+        assert_eq!(part1(EXAMPLE), 79)
+    }
+
+    #[test]
+    fn part2_example() {
+        assert_eq!(part2(EXAMPLE), 3621)
     }
 }
