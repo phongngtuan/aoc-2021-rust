@@ -60,7 +60,7 @@ fn sum_grid(x0: i64, y0: i64, image: &HashSet<(i64, i64)>, boundary: (i64, i64, 
     let (min_x, min_y, max_x, max_y) = boundary;
     for y in y0-1..=y0+1 {
         for x in x0-1..=x0+1 {
-            grid_sum = grid_sum * 2;
+            grid_sum *= 2;
             let mut pixel = background;
             if min_x <= x && x <= max_x && min_y <= y && y <= max_y {
                 if image.contains(&(x, y)) {

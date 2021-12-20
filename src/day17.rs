@@ -61,7 +61,7 @@ pub fn part2(input: &str) -> i64 {
     let mut ans = 0;
     for dx in 0..=x_max {
         for dy in -y_bound..=y_bound {
-            if let Some(_) = hit_target(x_min, x_max, y_min, y_max, dx, dy) {
+            if hit_target(x_min, x_max, y_min, y_max, dx, dy).is_some() {
                 ans += 1;
             }
         }

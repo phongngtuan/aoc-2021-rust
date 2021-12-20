@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::ops::{Add, Mul, Sub};
-use itertools::{enumerate, Itertools};
+use itertools::{Itertools};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 struct Point([i64; 3]);
@@ -133,8 +133,8 @@ impl Alignment {
     }
 
     fn score(&self, a: &[Point], b: &[Point]) -> usize {
-        let mut a: HashSet<_> = a.iter().map(|p| self.apply(*p)).collect();
-        let b: HashSet<_> = b.iter().map(|p| *p).collect();
+        let a: HashSet<_> = a.iter().map(|p| self.apply(*p)).collect();
+        let b: HashSet<_> = b.iter().copied().collect();
         a.intersection(&b).count()
     }
 }
@@ -173,7 +173,7 @@ const ORIENTATIONS: [[i64; 3]; 24] = [
 
 fn orient(point: Point, orientation: &[i64; 3]) -> Point {
     let mut result = [0, 0, 0];
-    let mut p = point.0;
+    let p = point.0;
     for (write, read) in orientation.iter().enumerate() {
         result[write] = p[read.abs() as usize - 1];
         if *read < 0 {

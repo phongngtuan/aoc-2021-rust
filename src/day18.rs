@@ -1,7 +1,7 @@
 use std::collections::VecDeque;
-use std::fmt::{Display, Formatter};
-use itertools::{enumerate, Itertools};
-use crate::day18::Num::Pair;
+
+use itertools::{Itertools};
+
 
 
 enum Num {
@@ -53,8 +53,8 @@ impl Num {
     }
 
     fn reduce(&mut self) {
-        while let Some(_) = self.action() {
-            ()
+        while self.action().is_some() {
+            
         }
     }
 
@@ -111,7 +111,7 @@ impl Num {
                     let explosion = left.explode_depth(depth + 1);
                     match explosion {
                         Some(explosion) => {
-                            let Explosion(mut new_node, mut left_cout, mut right_cout) = explosion;
+                            let Explosion(mut new_node, left_cout, mut right_cout) = explosion;
                             match new_node {
                                 Some(node) => {
                                     *left = *node;
@@ -126,14 +126,14 @@ impl Num {
                                 },
                                 _ => ()
                             }
-                            return Some(Explosion(new_node, left_cout, right_cout))
+                            Some(Explosion(new_node, left_cout, right_cout))
                         },
                         None => {
                             // going right
                             let explosion = right.explode_depth(depth + 1);
                             match explosion {
                                 Some(explosion) => {
-                                    let Explosion(mut new_node, mut left_cout, mut right_cout) = explosion;
+                                    let Explosion(mut new_node, mut left_cout, right_cout) = explosion;
                                     match new_node {
                                         Some(node) => {
                                             *right = *node;
@@ -301,8 +301,8 @@ mod tests {
         for (a, b, output) in [
             ("[[[[4,3],4],4],[7,[[8,4],9]]]", "[1,1]", "[[[[0,7],4],[[7,8],[6,0]]],[8,1]]"),
         ] {
-            let mut tree_a = Num::parse(&mut a.chars().collect());
-            let mut tree_b = Num::parse(&mut b.chars().collect());
+            let tree_a = Num::parse(&mut a.chars().collect());
+            let tree_b = Num::parse(&mut b.chars().collect());
             let tree = tree_a.add(tree_b);
             assert_eq!(tree.to_string(), output)
         }
@@ -326,7 +326,7 @@ mod tests {
 
     #[test]
     fn example1() {
-        let input = "\
+        let _input = "\
 [[[0,[5,8]],[[1,7],[9,6]]],[[4,[1,2]],[[1,4],2]]]
 [[[5,[2,8]],4],[5,[[9,9],0]]]
 [6,[[[6,2],[5,6]],[[7,6],[4,7]]]]
